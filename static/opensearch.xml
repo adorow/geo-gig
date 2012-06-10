@@ -1,0 +1,8 @@
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+<ShortName>geo-gig</ShortName>
+<LongName>geo-gig Search</LongName>
+<Description>Find gigs happening close to you with geo-gig.</Description>
+<InputEncoding>UTF-8</InputEncoding>
+<Image width="16" height="16">http://geo-gig.appspot.com/icons/favicon.ico</Image>
+<Url type="text/html" method="get" template="http://geo-gig.appspot.com/search?q={searchTerms}"/>
+</OpenSearchDescription>

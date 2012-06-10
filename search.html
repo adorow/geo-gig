@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+
+{% block content %}
+    <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?key=AIzaSyCapaGF3mD67lBA-iGLs_j4doCwEh1tqgs&sensor=false"></script>
+    
+    <script type="text/javascript">
+        $(document).ready(function() {
+            function addMapEvent(map, marker, info) {
+                google.maps.event.addListener(marker, 'click', function() {
+                    info.open(map,marker);
+                });
+            };
+        
+            var mapOptions = {
+                center: new google.maps.LatLng( {{ center.latitude }}, {{ center.longitude }} ),
+                zoom: {{ zoom }},
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+            };
+            var map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
+            
+            {# TODO: it may happen that two places share the same exact point (Academy and Academy 2 in Dublin). Need then to group this by the geopoint instead of whole place; because the way it is it's hidding one of the places #}
+            {% for venue, concerts in events|groupby('venue') %}
+            
+                var marker = new google.maps.Marker({
+                    position: new google.maps.LatLng( {{ venue.location['geo:point']['geo:lat'] }}, {{ venue.location['geo:point']['geo:long'] }} ),
+                    map: map,
+                    //{# title: "{{ (concerts | first)['title'] | replace('"', '\\"') }}{%if (concerts|count) > 1%}, and more{%endif%} @ {{ venue.name }}" #}
+                    title: "{{ (concerts | first)['title'] | replace('"', '\\"') }} @ {{ venue.name }}"
+                });
+                
+                var info = '' +
+                            {# TODO: with the following, we're only showing one concert at a time, in the future should come up with a nice way to show all of them. (probably showing one at a time, and giving the possibility of selection the others like tabs, or links) #}
+                            {% set concert = (concerts | first) %}
+                            //{# for concert in concerts #}
+                                '<div class="event_details">' +
+                                '   <div class="event_topdetails">'+
+                                {%      if concert.image and (concert.image | count) > 2 %}
+                                '           <div class="event_poster">' +
+                                {# TODO: determine the correct image to show #}
+                                '               <img src="{{ concert.image[2]['#text'] }}"/>' +
+                                '           </div>' +
+                                {%      endif %}
+                                '       <div class="event_main_info">' +
+                                '           <span class="event_title">{% if concert.website %}<a href="{{ concert.website }}" target="_blank">{{ concert.title | replace("'","\\'") }}</a>{% else %}{{ concert.title | replace("'","\\'") }}{% endif %}</span><br />' +
+                                {%          if concert.cancelled == '1' %}
+                                '               <span class="cancelled"> (CANCELLED)</span>' +
+                                {%          endif %}
+                                {%          if concert.title != concert.artists.headliner %}
+                                '               <span class="event_mainband">{{ concert.artists.headliner | replace("'","\\'") }}</span><br />' +
+                                {%          endif %}
+                                {# TODO: maybe, in the future, create a link in each band to execute the service to show their next events #}
+                                {%          if concert.artists.artist is not string %}
+                                {# TODO: if there are too many bands, cut part of it off #}
+                                '               <span class="event_allbands">{{ concert.artists.artist | join(', ') | replace("'","\\'") }}</span>' +
+                                {%          endif %}
+                                '       </div>' +
+                                '   </div>' +
+                                '   <div class="event_other_details">' +
+                                {# TODO: do something like: DATE at TIME, ex: Tuesday, 12 June 2012 at 6:30pm #}
+                                '       <p class="event_description">On <strong>{{ concert.startDate }}</strong> at <strong>{{ venue.name | replace("'","\\'")}}</strong>.</p>' +
+                                '       <p class="event_address">' +
+                                {%          if venue.location.street %}'{{ venue.location.street | replace("'","\\'") }}<br />' +{% endif %}
+                                {%          if venue.location.postalcode %}'{{ venue.location.postalcode | replace("'","\\'") }}, ' + {% endif%}
+                                '           {{ venue.location.city | replace("'","\\'") }}<br />' +
+                                '           {{ venue.location.country | replace("'","\\'") }}<br />' +
+                                '       </p>' +
+                                '       <p class="venue_contact">' +
+                                {%          if venue.phonenumber %}
+                                '               <strong>Tel:</strong> {{ venue.phonenumber }}<br />' +
+                                {%          endif %}
+                                {%          if venue.website %}
+                                '               <strong>Web:</strong> {{ venue.website | urlize}}' +
+                                {%          endif %}
+                                '      </p>' +
+                                '   </div>' +
+                                '</div>' +
+                           //{# endfor #}
+                           '';
+                           
+                var infowindow = new google.maps.InfoWindow({
+                    content: info,
+                    maxWidth: 500
+                });
+                
+                addMapEvent(map, marker, infowindow);
+                
+            {% endfor %}
+            
+        });
+    </script>
+    
+    <div id="map_canvas" style="width:100%; height:480px" />
+{% endblock %}

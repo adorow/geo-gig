@@ -1,0 +1,135 @@
+
+body {
+    margin: 0;
+    background-color: #DDDDDD;
+    font-family: "Helvetica Neue","Segoe UI",Arial,sans-serif;
+    min-width: 900px;
+}
+
+.text_search {
+    width: 400px;
+    height: 26px;
+    font-size: 18px;
+}
+
+.button_search {
+    cursor: pointer; 
+    width: 32px; 
+    height: 32px;
+    border: none;
+}
+
+.logo_image {
+    cursor: url(/static/hand_cursor.gif), pointer;
+}
+
+.hint {
+    color: #FA3B21;
+    font-weight: bold;
+    border: 2px solid #FA3B21;
+    padding: 3px;
+}
+
+.main_text {
+    width: 900px;
+    padding-top: 50px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #DDDDDD;
+}
+
+.event_title {
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.event_mainband {
+    font-size: 14px;
+}
+
+.event_allbands {
+    font-size: 12px;
+}
+
+.event_description {
+    font-size: 13px;
+}
+
+.event_address, .venue_contact {
+    font-size: 12px;
+}
+
+.event_poster {
+    float: left;
+}
+
+.event_other_details {
+    clear: both;
+}
+
+.event_cancelled {
+    font-weight: bold;
+    color: red;
+}
+
+#search_container {
+    padding-top: 10px;
+}
+
+#logo {
+    float: left;
+    margin: 12px 12px 0px 12px;
+}
+
+#header {
+    height: 55px;
+    min-width: 100%;
+    border-bottom: 1px solid #BBBBBB;
+}
+
+#footer {
+    font-size: 14px;
+    min-width: 100%;
+    border-top: 1px solid #BBBBBB;
+}
+
+#footer a {
+    color: #000000;
+    text-decoration: none;
+}
+
+#footer a:hover {
+    text-decoration: underline;
+}
+
+#content {
+    min-width: 100%;
+    background-color: #FA3B21;
+}
+
+#btn_search {
+    background: url(/static/hand.png) no-repeat center; 
+}
+#btn_search:hover {
+    background: url(/static/hand_hl.png) no-repeat center; 
+}
+
+#btn_geosearch {
+    background: url(/static/aim.png) no-repeat center; 
+}
+
+#btn_geosearch:hover {
+    background: url(/static/aim_hl.png) no-repeat center; 
+}
+
+#about {
+    float: left;
+}
+
+#poweredby {
+    float: right;
+}
+
+#about, #poweredby {
+    margin: 5px;
+}

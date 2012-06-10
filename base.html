@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        {% block head %}
+        <title>geo-gig - Find gigs near you</title>
+        <link rel="stylesheet" type="text/css" href="/static/main.css" />
+        <link rel="shortcut icon" href="/static/hand.ico">
+        <link title="geo-gig" type="application/opensearchdescription+xml" rel="search" href="/static/opensearch.xml">
+        {% endblock %}
+    </head>
+    <body>
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+        <script src="static/geo_util.js"></script>
+        <script type="text/javascript">
+            function showErrorOnHint(error) {
+                $('#hint').addClass('hint');
+                $('#hint').text('!! Error obtaining position: ' + error.message + ' !!');
+            }
+            
+            function adjustHeights() {
+                var header_h = $('#header').outerHeight(true);
+                var content_h = $('#content').outerHeight(true);
+                var window_h = $(window).height();
+                $('#footer').height(30);
+                var footer_h = $('#footer').outerHeight(true);
+                
+                var h = window_h - header_h - footer_h;
+                var content_h_min = 450;
+                if (h < content_h_min) h = content_h_min;
+                
+                $('#content').height(h);
+                if ($('#map_canvas')) {
+                    $('#map_canvas').height(h);
+                }
+            }
+                
+            $(document).ready(function () {
+                adjustHeights();
+            
+                $('#btn_geosearch').click(function(event) {
+                    event.preventDefault();
+                    getGeoPos(
+                        function(position) {
+                            var user_lat = position.coords.latitude;
+                            var user_lon = position.coords.longitude;
+                    
+                            $('#in_geoq').val(user_lat + ' ' + user_lon);
+                    
+                            $('#geosearch_form').submit();
+                        },
+                        showErrorOnHint
+                    );
+                });
+                
+                $(window).resize(adjustHeights);
+            });
+        </script>
+        
+        <div id="header">
+            <div id="logo">
+                <a href="/">
+                    <img src="/static/logo.png" class="logo_image" />
+                </a>
+            </div>
+                <div id="search_container">
+                    <form id="search_form" name="sf" method="get" action="/search" onsubmit="return $.trim($('#in_q').val()).length > 0;">
+                        <table>
+                            <tr>
+                                <td>
+                                    <input id="in_q" name="q" type="text" class="text_search" value="{{ query }}"/>
+                                </td>
+                                <td>
+                                    <button id="btn_search" type="submit" class="button_search" title="Search" />
+                                </td>
+                                <td>
+                                    <button id="btn_geosearch" class="button_search" title="Geolocalized search" />
+                                </td>
+                                <td>
+                                    <div id="hint"/>
+                                </td>
+                            </tr>
+                        </table>
+                    </form>
+                    <form id="geosearch_form" name="sf" method="get" action="/search" style="visibility: hidden;">
+                        <input id="in_geoq" name="q" type="hidden"/>
+                    </form>
+                </div>
+            {% block header %}{% endblock %}
+        </div>
+        
+        <div id="content">
+        {% block content %}{% endblock %}
+        </div>
+        
+        <div id="footer">
+        {% block footer %}
+            <div id="about">
+                About the <a href="https://plus.google.com/107586232022282879322/about" target="_blank">author</a>.
+                About the <a href="https://github.com/adorow/geo-gig" target="_blank">project</a>. 
+            </div>
+            <div id="poweredby">
+                This project is powered by the <a href="http://www.last.fm/api" target="_blank">last.fm API</a>.
+            </div>
+        {% endblock %}
+        </div>
+        
+    </body>
+</html>
