@@ -1,14 +1,17 @@
 geo-gig
 =======
 
-The geo-gig is a service where you inform a location, or coordinates of a location, and a map is loaded with information about shows that will be happening near (or at) the given location. It run on the [Google App Engine][gae] platform. The back-end is built in [Python][py], and the front-end uses [JQuery][jq]. The [Google Maps API][gmaps] is used to build the maps, and the [Last.fm API][lfm] powers the gig search. 
+The geo-gig is a service where you inform a location, or coordinates of a location, and a map is loaded with information about shows that will be happening near (or at) the given location. It runs on the [Google App Engine][gae] platform. The back-end is built in [Python][py], and the front-end uses [JQuery][jq]. The [Google Maps API][gmaps] is used to build the maps, and the [Last.fm API][lfm] powers the gig search. 
 
 How to use it
 -------------
 
 First go to [geo-gig][geogig];
+
 then type the name of the location (or the coordinates) where you want to look for gigs, or just click the geolocalized search button;
+
 a map will appear with all the events found.
+
 Enjoy!
 
 Contributing
