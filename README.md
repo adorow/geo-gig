@@ -6,13 +6,10 @@ The geo-gig is a service where you inform a location, or coordinates of a locati
 How to use it
 -------------
 
-First go to [geo-gig][geogig];
-
-then type the name of the location (or the coordinates) where you want to look for gigs, or just click the geolocalized search button;
-
-a map will appear with all the events found.
-
-Enjoy!
+1. First go to [geo-gig][geogig];
+2. then type the name of the location (or the coordinates) where you want to look for gigs, or just click the geolocalized search button;
+3. a map will appear with all the events found.
+4. Enjoy!
 
 Contributing
 ------------
