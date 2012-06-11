@@ -42,6 +42,9 @@ class BaseRequestHandler(webapp2.RequestHandler):
         
 
 class MainPage(BaseRequestHandler):
+    """
+        The opening page.
+    """
     def get(self):
         index_message = """
             <span>Are you looking for gigs?</span>
@@ -56,6 +59,9 @@ class MainPage(BaseRequestHandler):
         self._get_message(index_message)
 
 class GigSearch(BaseRequestHandler):
+    """
+        The search page.
+    """
     def get(self):
         def getLatLon(q):
             nums = map(get_number, q.split())
@@ -91,6 +97,8 @@ class GigSearch(BaseRequestHandler):
         self._get_error(error_title, help=help_info)
     
     def _get_search(self, query=None, latitude=None, longitude=None):
+        # TODO: find a service (maybe google has one) that 
+    
         # TODO: have to make this better. Is very messy (and very ugly. Most of it, at least). A massive refactor is probably on the way... reminder: binsearch idea with distance and limit. 
    
         # location should be sent only if latitude and longitude are not, because when location is informed, the Last.fm API always use this, and ignores latitude and longitude
@@ -108,14 +116,25 @@ class GigSearch(BaseRequestHandler):
             if not isinstance(events_list, list):
                 events_list = [events_list]
             
+            # remove events with empty coordinates (TODO: check if its possible to use those events anyway, maybe find its coordinates with another service [is there a google maps search?], or show it differently)
+            events_list = filter(lambda e: e['venue']['location']['geo:point']['geo:lat'] and e['venue']['location']['geo:point']['geo:long'], events_list) 
+            
+            def float2(n):
+                try:
+                    return float(n)
+                except ValueError as e:
+                    raise ValueError('error on "' + n + '"')
+            
             if not (latitude and longitude):
-                points = map(lambda e: (float(e['venue']['location']['geo:point']['geo:lat']), float(e['venue']['location']['geo:point']['geo:long'])), events_list) # get all the points of the events
+                # TODO:  there can be places without latitude and longitude (appear as empty strings on the response received), the way it is now, errors occur
+                points = map(lambda e: (float2(e['venue']['location']['geo:point']['geo:lat']), float2(e['venue']['location']['geo:point']['geo:long'])), events_list) # get all the points of the events
                 sum_lat, sum_lon = reduce(lambda (lat1, lon1), (lat2, lon2): (lat1 + lat2, lon1 + lon2), points, (0,0))
                 latitude, longitude = (str(sum_lat / len(points)), str(sum_lon / len(points))) if len(points) > 0 else (0,0)
-            #print events_dict['events']['@attr']  # THIS THING ON THE LEFT SHOWS THE PARAMETERS USED ON THE SEARCH!
+              
+            #print events_dict['events']['@attr']  # TODO: his can show the parameters used on the search by Last.fm. Maybe this information can be used for something useful.
             
             self._write('search.html', { 'center': {'latitude': latitude, 'longitude': longitude }, 'zoom': 8, 'events': events_list })
             
 app = webapp2.WSGIApplication([('/', MainPage),
                                ('/search', GigSearch)],
-                              debug=True)# CHANGE THIS TO 'FALSE' WHEN IT GETS DEPLOYED TO GOOGLEAPPENGINE
+                              debug=False)
