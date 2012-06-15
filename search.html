@@ -46,7 +46,7 @@
                                 '       <div class="event_main_info">' +
                                 '           <span class="event_title">{% if concert.website %}<a href="{{ concert.website }}" target="_blank">{{ concert.title | replace("'","\\'") }}</a>{% else %}{{ concert.title | replace("'","\\'") }}{% endif %}</span><br />' +
                                 {%          if concert.cancelled == '1' %}
-                                '               <span class="cancelled"> (CANCELLED)</span>' +
+                                '               <span class="event_cancelled"> (CANCELLED)</span>' +
                                 {%          endif %}
                                 {%          if concert.title != concert.artists.headliner %}
                                 '               <span class="event_mainband">{{ concert.artists.headliner | replace("'","\\'") }}</span><br />' +
