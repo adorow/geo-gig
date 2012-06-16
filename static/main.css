@@ -43,8 +43,13 @@ body {
     font-weight: bold;
 }
 
-.event_mainband {
-    font-size: 14px;
+.event_title a {
+    color: #000000;
+    text-decoration: none;
+}
+
+.event_title a:hover {
+    text-decoration: underline;
 }
 
 .event_allbands {

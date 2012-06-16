@@ -48,16 +48,17 @@
                                 '           </div>' +
                                 {%      endif %}
                                 '       <div class="event_main_info">' +
-                                '           <span class="event_title">{% if concert.website %}<a href="{{ concert.website }}" target="_blank">{{ concert.title | replace("'","\\'") }}</a>{% else %}{{ concert.title | replace("'","\\'") }}{% endif %}</span><br />' +
+                                '           <span class="event_title"><a href="{% if concert.website %}{{ concert.website | replace("'","\\'") }}{% else %}{{ concert.url | replace("'","\\'") }}{% endif %}" target="_blank">{{ concert.title | replace("'","\\'") }}</a></span><br />' +
                                 {%          if concert.cancelled == '1' %}
                                 '               <span class="event_cancelled"> (CANCELLED)</span>' +
                                 {%          endif %}
-                                {%          if concert.title != concert.artists.headliner %}
-                                '               <span class="event_mainband">{{ concert.artists.headliner | replace("'","\\'") }}</span><br />' +
+                                '           <span class="event_allbands">' +
+                                {%          if concert.artists.artist is string %}{# the list of artists may be a string or a list of strings #}
+                                '{{ concert.artists.artist | replace("'","\\'") }}' +
+                                {%          else %}
+                                '{{ concert.artists.artist | join(', ') | replace("'","\\'") }}' +
                                 {%          endif %}
-                                {%          if concert.artists.artist is not string %}{# in other words, if there is only one artist in this event #}
-                                '               <span class="event_allbands">{{ concert.artists.artist | join(', ') | replace("'","\\'") }}</span>' +
-                                {%          endif %}
+                                '           </span>' +
                                 '       </div>' +
                                 '   </div>' +
                                 '   <div class="event_other_details">' +
