@@ -8,9 +8,15 @@
     
     <script type="text/javascript">
         $(document).ready(function() {
+            var last_opened_info = undefined;
+            
             function addMapEvent(map, marker, info) {
                 google.maps.event.addListener(marker, 'click', function() {
+                    if (last_opened_info) {
+                        last_opened_info.close();
+                    }
                     info.open(map,marker);
+                    last_opened_info = info;
                 });
             };
         
@@ -32,14 +38,12 @@
                 });
                 
                 var info = '' +
-                            {# TODO: with the following, we're only showing one concert at a time, in the future should come up with a nice way to show all of them. (probably showing one at a time, and giving the possibility of selection the others like tabs, or links) #}
                             {% set concert = (concerts | first) %}
                             //{# for concert in concerts #}
                                 '<div class="event_details">' +
                                 '   <div class="event_topdetails">'+
                                 {%      if concert.image and (concert.image | count) > 2 %}
                                 '           <div class="event_poster">' +
-                                {# TODO: determine the correct image to show #}
                                 '               <img src="{{ concert.image[2]['#text'] }}"/>' +
                                 '           </div>' +
                                 {%      endif %}
@@ -51,19 +55,16 @@
                                 {%          if concert.title != concert.artists.headliner %}
                                 '               <span class="event_mainband">{{ concert.artists.headliner | replace("'","\\'") }}</span><br />' +
                                 {%          endif %}
-                                {# TODO: maybe, in the future, create a link in each band to execute the service to show their next events #}
-                                {%          if concert.artists.artist is not string %}
-                                {# TODO: if there are too many bands, cut part of it off #}
+                                {%          if concert.artists.artist is not string %}{# in other words, if there is only one artist in this event #}
                                 '               <span class="event_allbands">{{ concert.artists.artist | join(', ') | replace("'","\\'") }}</span>' +
                                 {%          endif %}
                                 '       </div>' +
                                 '   </div>' +
                                 '   <div class="event_other_details">' +
-                                {# TODO: do something like: DATE at TIME, ex: Tuesday, 12 June 2012 at 6:30pm #}
                                 '       <p class="event_description">On <strong>{{ concert.startDate }}</strong> at <strong>{{ venue.name | replace("'","\\'")}}</strong>.</p>' +
                                 '       <p class="event_address">' +
                                 {%          if venue.location.street %}'{{ venue.location.street | replace("'","\\'") }}<br />' +{% endif %}
-                                {%          if venue.location.postalcode %}'{{ venue.location.postalcode | replace("'","\\'") }}, ' + {% endif%}
+                                {%          if venue.location.postalcode %}'{{ venue.location.postalcode | replace("'","\\'") }}, ' + {% endif %}
                                 '           {{ venue.location.city | replace("'","\\'") }}<br />' +
                                 '           {{ venue.location.country | replace("'","\\'") }}<br />' +
                                 '       </p>' +
