@@ -1,4 +1,5 @@
 
+import logging
 import urllib2
 
 # TODO some functions to be added in the (hopefully) near future:
@@ -7,6 +8,7 @@ import urllib2
 # - Artist.getEvents        |-> Next events from a given artist
 # - Artist.getCorrection    |-> Auto correction for artist names
 # - Artist.search           |-> Search artists, returns results by relevance
+# - Artist.getInfo
 # - Event.getInfo           |-> Informations about events (Geo.getEvents already has those, I think)
 
 API_ROOT_URL = 'http://ws.audioscrobbler.com/2.0/'
@@ -36,10 +38,11 @@ class Lastfm:
         """
         if not method_name:
             raise ValueError('A method name needs to be informed.')
-    
+        
         url = self._build_url(method_name, params)
+        logging.debug('Url for Last.fm request built: ' + url)
         result = urllib2.urlopen(url).read()
-    
+        logging.debug('Response from Last.fm: ' + result)
         return result
     
     def _build_url(self, method_name, other_params):

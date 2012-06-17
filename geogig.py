@@ -1,14 +1,14 @@
-import webapp2
 
+import logging
+import webapp2
 import jinja2
 import os
 
 from lastfm_little_wrapper import Lastfm
-
 from html_text_builder import HtmlTextBuilder
 from num_util import parse_num
-
 from gig_searcher import *
+from lastfm_gig_searcher import *
 
 LASTFM_API_KEY = "9b6deef6cb410837dd90c9a15fa1a4cf"
 
@@ -16,11 +16,14 @@ jinja_environment = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)))
 
 class BaseRequestHandler(webapp2.RequestHandler):
+    "Base Request Handler implementation, with some useful functions."
     
     def _get_param(self, param):
+        "Obtains a parameter from the request."
         return self.request.get(param)
     
     def _get_error(self, title, description = None, help = None):
+        "Writes an error page with a given error."
         html = HtmlTextBuilder().text(title)
         if description:
             html.linebreak(2).text(description)
@@ -30,9 +33,11 @@ class BaseRequestHandler(webapp2.RequestHandler):
         return self._get_message(html)
     
     def _get_message(self, html):
+        "Writes a page with a message."
         self._write('message.html', {'message': html})
         
     def _write(self, template, values={}):
+        "Writes a page defined by the given template, and with the values informed."
         q = self._get_param('q')
         if q:
             values['query'] = q
@@ -41,7 +46,7 @@ class BaseRequestHandler(webapp2.RequestHandler):
 
 class MainPageHandler(BaseRequestHandler):
     "Handler for the main page."
-    def get(self):
+    def get(self):    
         index_message = HtmlTextBuilder().text('Are you looking for gigs?').linebreak(2)
         index_message.text('Write the name of the city and/or country where you want to party, or write a latitude and longitude (in this order), and then press the search button.').linebreak(2)
         index_message.text('Or just press the geolocalized search button, and let geo-gig find the gigs near you.')
@@ -50,42 +55,41 @@ class MainPageHandler(BaseRequestHandler):
 
 class GigSearchHandler(BaseRequestHandler):
     "Handler for the search results page."
-    def get(self):
-        def getLatLon(q):
-            nums = map(parse_num, q.split())
-            if len(nums) != 2 or not all(nums):
-                return (None, None)
-            return map(str, nums) # they have to be strings after all
+
+    @staticmethod
+    def _get_latitude_and_longitude_from_query(q):
+        "Tries to parse the query as two numbers, if is not possible to get exactly that, return two None values."
+        nums = map(parse_num, q.split())
+        if len(nums) != 2 or not all(nums):
+            return (None, None)
+        return map(str, nums) # they have to be strings
             
+    def get(self):
         q = self._get_param('q')
-        lat, lon = getLatLon(q)
+        logging.debug('Query received: "' + q + '".')
+        lat, lon = self._get_latitude_and_longitude_from_query(q)
         
         try:
-            gig_searcher = LastfmGigSearcher(LASTFM_API_KEY)
-            if lat and lon:
-                events_list = gig_searcher.searchByCoordinates(lat, lon)
+            gig_searcher = GigSearcher(LastfmGigSearcherSource(LASTFM_API_KEY), LastfmGigSearchResultTranslator())
+            if (lat and lon):
+                events_list = gig_searcher.search_by_coordinates(lat, lon)
             else:
-                events_list = gig_searcher.searchByLocation(q)
+                events_list = gig_searcher.search_by_location(q)
                 
-                # TODO:  there can be places without latitude and longitude (appear as empty strings on the response received), the way it is now, errors occur
-                points = map(lambda e: (float(e['venue']['location']['geo:point']['geo:lat']), float(e['venue']['location']['geo:point']['geo:long'])), events_list) # get all the points of the events
+                # get all the points of the events
+                points = map(lambda e: (float(e['venue']['location']['geo:point']['geo:lat']), float(e['venue']['location']['geo:point']['geo:long'])), events_list) 
                 sum_lat, sum_lon = reduce(lambda (lat1, lon1), (lat2, lon2): (lat1 + lat2, lon1 + lon2), points, (0,0))
+                # get the average latitude and longitude
                 lat, lon = (str(sum_lat / len(points)), str(sum_lon / len(points))) if len(points) > 0 else (0,0)
-      
-            
+
             self._write('search.html', { 'center': {'latitude': lat, 'longitude': lon }, 'zoom': 8, 'events': events_list })
         except GigSearchException as e:
+            logging.error('Error on search for query "' + q + '". Description: ' + e.strerror)
             self._get_error('Error requesting to the service ' + e.service + ' for query "' + q + '".', description=e.strerror)
-        
-        # TODO: take a look at the directions webservice https://developers.google.com/maps/documentation/directions/ . Some good ideas may arise. 
-        # TODO: the static maps API may be useful some time: https://developers.google.com/maps/documentation/staticmaps
-        
-        # TODO: for testing purposes, an example of a call to the lastfm api is:
-        # http://ws.audioscrobbler.com/2.0/?method=geo.getevents&format=json&latitude=53.366587&longitude=-6.2587435&api_key=9b6deef6cb410837dd90c9a15fa1a4cf
-        
-        # TODO: try to validate input? to maybe 'throw' a '_get_invalid_search_syntax'?
-        #self._get_search(q, lat, lon)
-    
+        except IOError as e:
+            logging.error('Unexpected error rouse while querying for "' + q + '". Description: ' + str(e))
+            self._get_error('Something suddenly went wrong when you queried for "' + q + '", try again later.', description=str(e))
+
     def _get_server_error_on_search(self, service, error, query):
         error_title = 'Error requesting to the service ' + service + ' for query "' + query + '".'
         error_description = HtmlTextBuilder().text('Service responded:').linebreak().text(error).get_text()
