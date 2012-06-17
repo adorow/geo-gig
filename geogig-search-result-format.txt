@@ -1,0 +1,42 @@
+# This file defines the format understanded by the geo-gig, the format used for the search results shown in the search.html template. The search.html file will consider that every data defined here will exist in an object received there.
+
+# The definition is done by example, and will contain some special characters, described below (most definitions are the same that are already defined for the Python programming language, they are just describer here to avoid any confusion while reading the definition):
+# [] -> Encloses a list of elements. And, although in this file the lists will always contain one element, in the real result this lists may contain several elements, or none.
+# {} -> Encloses a dictionary. They will contain series of key-value pairs. And all the keys defined here will exist in the final result, always.
+# #  -> Just define a comment, will not appear in the real result.
+# '' -> Enclose strings, sequences of characters. Those will be keys for the dictionaries.
+# <> -> Will enclose the definition of a value.
+
+[ # top-level list with tuples of coordinates and events (this is only created right before the data is sent to the template, the GigSearch will return a list with all the events, exactly like the value on this key value pair)
+    (
+        (<latitude>, <longitude>), # tuple with the latitude and longitude where the event will happen (there'll be many of those)
+        [ # list of events on the given (latitude, longitude) 
+            { # an event
+                'title': <the title of the event>,
+                'image_url': <the url of the image, or None if there's no image>,
+                'url': <an url linking to the official page of the event, or some other url about the event, or None if there's no page at all>,
+                'cancelled': <any value to indicate in Python that the event is cancelled, but preferably True or False>,
+                'artists': [ # list with the artists in the event
+                                'name': <the name of the artist>,
+                                'url': <url to the official page of the band, or some other page about the artist, or None if there's no page>
+                ], 
+                'date': <date and time of the event>,
+                'venue' : { # the venue is the place where the show will happen
+                    'name' : <the name of the place>,
+                    'phonenumber': <the phonenumber of the place, None if there's no phonenumber>,
+                    'url': <url to the page of the place, if there's one, or to any other page>,
+                    'location': { # information about the location of the venue
+                        'street': <the street address, may be None>,
+                        'postalcode': <the postalcode part of the address, may be None>,
+                        'city': <the city where the place is localized, shouldn't ever be None>,
+                        'country': <the country where the place is localized, shouldn't ever be None>,
+                        'coordinates': { # coordinates to the place
+                            'latitude': <the latitude>,
+                            'longitude': <the longitude>
+                        }
+                    }                
+                }
+            }
+        ]
+    )
+]                 

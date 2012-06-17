@@ -4,11 +4,13 @@ import webapp2
 import jinja2
 import os
 
+from geogig_format_util import get_coordinate_from_event
 from lastfm_little_wrapper import Lastfm
 from html_text_builder import HtmlTextBuilder
 from num_util import parse_num
 from gig_searcher import *
 from lastfm_gig_searcher import *
+from itertools_plus import group_by
 
 LASTFM_API_KEY = "9b6deef6cb410837dd90c9a15fa1a4cf"
 
@@ -77,12 +79,14 @@ class GigSearchHandler(BaseRequestHandler):
                 events_list = gig_searcher.search_by_location(q)
                 
                 # get all the points of the events
-                points = map(lambda e: (float(e['venue']['location']['geo:point']['geo:lat']), float(e['venue']['location']['geo:point']['geo:long'])), events_list) 
+                points = map(get_coordinate_from_event, events_list) 
                 sum_lat, sum_lon = reduce(lambda (lat1, lon1), (lat2, lon2): (lat1 + lat2, lon1 + lon2), points, (0,0))
                 # get the average latitude and longitude
                 lat, lon = (str(sum_lat / len(points)), str(sum_lon / len(points))) if len(points) > 0 else (0,0)
 
-            self._write('search.html', { 'center': {'latitude': lat, 'longitude': lon }, 'zoom': 8, 'events': events_list })
+            events_list = group_by(events_list, key=get_coordinate_from_event)
+                
+            self._write('search.html', { 'center': {'latitude': lat, 'longitude': lon }, 'zoom': 8, 'events': events_list.items() })
         except GigSearchException as e:
             logging.error('Error on search for query "' + q + '". Description: ' + e.strerror)
             self._get_error('Error requesting to the service ' + e.service + ' for query "' + q + '".', description=e.strerror)

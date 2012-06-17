@@ -38,18 +38,18 @@ body {
     color: #DDDDDD;
 }
 
-.event_title {
-    font-size: 15px;
-    font-weight: bold;
-}
-
-.event_title a {
+.event_details a {
     color: #000000;
     text-decoration: none;
 }
 
-.event_title a:hover {
+.event_details a:hover {
     text-decoration: underline;
+}
+
+.event_title {
+    font-size: 15px;
+    font-weight: bold;
 }
 
 .event_allbands {

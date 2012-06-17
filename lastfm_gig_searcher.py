@@ -3,6 +3,7 @@ import json
 
 from lastfm_little_wrapper import Lastfm
 from gig_searcher import *
+from geogig_format_util import get_coordinate_from_event
 
 class LastfmGigSearcherSource(GigSearcherSource):
     "Class that uses the Last.fm API as a source to search for gigs."
@@ -42,6 +43,68 @@ class LastfmGigSearchResultTranslator(GigSearchResultTranslator):
         if not isinstance(events_list, list):
             events_list = [events_list]
         
-        events_list = filter(lambda e: e['venue']['location']['geo:point']['geo:lat'] and e['venue']['location']['geo:point']['geo:long'], events_list) 
+        events_list = filter(lambda e: e['venue']['location']['geo:point']['geo:lat'] and e['venue']['location']['geo:point']['geo:long'], events_list)
         
-        return events_list
+        geogig_events = [self._translate_event(lastfm_event) for lastfm_event in events_list]
+        return geogig_events
+        
+    def _translate_event(self, lastfm_event): 
+        event = {}
+        
+        event['title'] = lastfm_event['title'] if 'title' in lastfm_event else None
+        
+        event['image_url'] = lastfm_event['image'][2]['#text'] if ('image' in lastfm_event and len(lastfm_event['image']) > 2 and '#text' in lastfm_event['image'][2]) else None
+        
+        event['url'] = lastfm_event['website'] if ('website' in lastfm_event and lastfm_event['website']) else lastfm_event['url'] if ('url' in lastfm_event and lastfm_event['url']) else None
+        
+        event['cancelled'] = True if ('cancelled' in lastfm_event and lastfm_event['cancelled'] == '1') else False
+        
+        event['date'] = lastfm_event['startDate'] if 'startDate' in lastfm_event else None
+        
+        if 'artists' not in lastfm_event or 'artist' not in lastfm_event['artists']:
+            event['artists'] =  []
+        else:
+            artists = lastfm_event['artists']['artist']
+            event['artists'] =  [self._translate_artist(artist) for artist in artists] if isinstance(artists, list) else [self._translate_artist(artists)]
+        
+        event['venue'] = self._translate_venue(lastfm_event['venue']) if 'venue' in lastfm_event else None
+        
+        return event
+        
+    def _translate_artist(self, lastfm_artist):
+        artist = {
+            'name' : lastfm_artist,
+            'url': None
+        }
+        
+        return artist
+    
+    def _translate_venue(self, lastfm_venue):
+        venue = {}
+        
+        venue['name'] = lastfm_venue['name'] if 'name' in lastfm_venue else None
+        venue['phonenumber'] = lastfm_venue['phonenumber'] if 'phonenumber' in lastfm_venue else None
+        venue['url'] = lastfm_venue['website'] if ('website' in lastfm_venue and lastfm_venue['website']) else lastfm_venue['url'] if ('url' in lastfm_venue and lastfm_venue['url']) else None
+        venue['location'] = self._translate_location(lastfm_venue['location']) if 'location' in lastfm_venue else None
+        
+        return venue
+        
+    def _translate_location(self, lastfm_location):
+        location = {}
+        
+        location['street'] = lastfm_location['street'] if 'street' in lastfm_location else None
+        location['postalcode'] = lastfm_location['postalcode'] if 'postalcode' in lastfm_location else None
+        location['city'] = lastfm_location['city'] if 'city' in lastfm_location else None
+        location['country'] = lastfm_location['country'] if 'country' in lastfm_location else None
+        location['coordinates'] = self._translate_coordinates(lastfm_location['geo:point']) if 'geo:point' in lastfm_location else None
+        
+        return location
+        
+    def _translate_coordinates(self, lastfm_coordinates):
+        coordinates = {
+            'latitude': lastfm_coordinates['geo:lat'] if 'geo:lat' in lastfm_coordinates else None,
+            'longitude': lastfm_coordinates['geo:long'] if 'geo:long' in lastfm_coordinates else None            
+        }
+        
+        return coordinates
+        

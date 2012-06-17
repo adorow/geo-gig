@@ -27,42 +27,55 @@
             };
             var map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
             
-            {# TODO: it may happen that two places share the same exact point (Academy and Academy 2 in Dublin). Need then to group this by the geopoint instead of whole place; because the way it is it's hidding one of the places #}
-            {% for venue, concerts in events|groupby('venue') %}
-            
+            {% for ((latitude, longitude), local_events) in events %}
+                
+                {% set first_event = (local_events | first) %}
+                
                 var marker = new google.maps.Marker({
-                    position: new google.maps.LatLng( {{ venue.location['geo:point']['geo:lat'] }}, {{ venue.location['geo:point']['geo:long'] }} ),
+                    position: new google.maps.LatLng( {{ latitude }}, {{ longitude }} ),
                     map: map,
-                    //{# title: "{{ (concerts | first)['title'] | replace('"', '\\"') }}{%if (concerts|count) > 1%}, and more{%endif%} @ {{ venue.name }}" #}
-                    title: "{{ (concerts | first)['title'] | replace('"', '\\"') }} @ {{ venue.name }}"
+                    title: "{{ first_event.title | replace('"', '\\"') }} @ {{ first_event.venue.name }}"
                 });
                 
                 var info = '' +
-                            {% set concert = (concerts | first) %}
-                            //{# for concert in concerts #}
+                            //{# for event in local_events #}
                                 '<div class="event_details">' +
                                 '   <div class="event_topdetails">'+
-                                {%      if concert.image and (concert.image | count) > 2 %}
+                                {%      if first_event.image_url %}
                                 '           <div class="event_poster">' +
-                                '               <img src="{{ concert.image[2]['#text'] }}"/>' +
+                                '               <img src="{{ first_event.image_url | replace("'","\\'") }}"/>' +
                                 '           </div>' +
                                 {%      endif %}
                                 '       <div class="event_main_info">' +
-                                '           <span class="event_title"><a href="{% if concert.website %}{{ concert.website | replace("'","\\'") }}{% else %}{{ concert.url | replace("'","\\'") }}{% endif %}" target="_blank">{{ concert.title | replace("'","\\'") }}</a></span><br />' +
-                                {%          if concert.cancelled == '1' %}
+                                '           <span class="event_title">'+
+                                {%              if first_event.url %}
+                                '                   <a href="{{ first_event.url | replace("'","\\'") }}" target="_blank">{{ first_event.title | replace("'","\\'") }}</a>'+
+                                {%              else %}
+                                '                   {{ first_event.title | replace("'","\\'") }}' +
+                                {%              endif %}
+                                '           </span><br />' +
+                                {%          if first_event.cancelled %}
                                 '               <span class="event_cancelled"> (CANCELLED)</span>' +
                                 {%          endif %}
                                 '           <span class="event_allbands">' +
-                                {%          if concert.artists.artist is string %}{# the list of artists may be a string or a list of strings #}
-                                '{{ concert.artists.artist | replace("'","\\'") }}' +
-                                {%          else %}
-                                '{{ concert.artists.artist | join(', ') | replace("'","\\'") }}' +
-                                {%          endif %}
+                                {%          set artists = first_event.artists %}
+                                {%          set head_artist = artists | first %}
+                                {%          for artist in artists %}
+                                {%              if artist != head_artist %}
+                                ', ' +
+                                {%              endif %}
+                                {%              if artist.url %}
+                                '<a href="{{ artist.url | replace("'","\\'") }}" target="_blank">{{ artist.name | replace("'","\\'") }}</a>' +
+                                {%              else %}
+                                '{{ artist.name | replace("'","\\'") }}' +
+                                {%              endif %}
+                                {%          endfor %}
                                 '           </span>' +
                                 '       </div>' +
                                 '   </div>' +
                                 '   <div class="event_other_details">' +
-                                '       <p class="event_description">On <strong>{{ concert.startDate }}</strong> at <strong>{{ venue.name | replace("'","\\'")}}</strong>.</p>' +
+                                {%      set venue = first_event.venue %}
+                                '       <p class="event_description">On <strong>{{ first_event.date }}</strong> at <strong>{{ venue.name | replace("'","\\'")}}</strong>.</p>' +
                                 '       <p class="event_address">' +
                                 {%          if venue.location.street %}'{{ venue.location.street | replace("'","\\'") }}<br />' +{% endif %}
                                 {%          if venue.location.postalcode %}'{{ venue.location.postalcode | replace("'","\\'") }}, ' + {% endif %}
@@ -73,15 +86,15 @@
                                 {%          if venue.phonenumber %}
                                 '               <strong>Tel:</strong> {{ venue.phonenumber }}<br />' +
                                 {%          endif %}
-                                {%          if venue.website %}
-                                '               <strong>Web:</strong> {{ venue.website | urlize}}' +
+                                {%          if venue.url %}
+                                '               <strong>Web:</strong> {{ venue.url | urlize}}' +
                                 {%          endif %}
                                 '      </p>' +
                                 '   </div>' +
                                 '</div>' +
                            //{# endfor #}
                            '';
-                           
+                
                 var infowindow = new google.maps.InfoWindow({
                     content: info,
                     maxWidth: 500
