@@ -53,7 +53,8 @@ class LastfmGigSearchResultTranslator(GigSearchResultTranslator):
         
         event['title'] = lastfm_event['title'] if 'title' in lastfm_event else None
         
-        event['image_url'] = lastfm_event['image'][2]['#text'] if ('image' in lastfm_event and len(lastfm_event['image']) > 2 and '#text' in lastfm_event['image'][2]) else None
+        large_images = [image['#text'] for image in lastfm_event['image'] if image['size'] == 'large']
+        event['image_url'] = large_images[0] if len(large_images) > 0 else None
         
         event['url'] = lastfm_event['website'] if ('website' in lastfm_event and lastfm_event['website']) else lastfm_event['url'] if ('url' in lastfm_event and lastfm_event['url']) else None
         

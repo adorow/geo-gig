@@ -79,7 +79,7 @@ class GigSearchHandler(BaseRequestHandler):
                 events_list = gig_searcher.search_by_location(q)
                 
                 # get all the points of the events
-                points = map(get_coordinate_from_event, events_list) 
+                points = map(lambda e: map(parse_num, get_coordinate_from_event(e)), events_list) 
                 sum_lat, sum_lon = reduce(lambda (lat1, lon1), (lat2, lon2): (lat1 + lat2, lon1 + lon2), points, (0,0))
                 # get the average latitude and longitude
                 lat, lon = (str(sum_lat / len(points)), str(sum_lon / len(points))) if len(points) > 0 else (0,0)

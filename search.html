@@ -53,10 +53,11 @@
                                 {%              else %}
                                 '                   {{ first_event.title | replace("'","\\'") }}' +
                                 {%              endif %}
-                                '           </span><br />' +
+                                '           </span>' +
                                 {%          if first_event.cancelled %}
                                 '               <span class="event_cancelled"> (CANCELLED)</span>' +
                                 {%          endif %}
+                                '           <br />'+
                                 '           <span class="event_allbands">' +
                                 {%          set artists = first_event.artists %}
                                 {%          set head_artist = artists | first %}
