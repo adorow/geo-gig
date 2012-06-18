@@ -21,4 +21,3 @@ class TestFunctions(unittest.TestCase):
         self.assertEquals(None, parse_num('word'))
         self.assertEquals(None, parse_num('1234 123'))
         self.assertEquals(None, parse_num('12,4'))
-        

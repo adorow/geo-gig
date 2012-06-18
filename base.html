@@ -76,7 +76,11 @@
                                     <button id="btn_geosearch" class="button_search" title="Geolocalized search" />
                                 </td>
                                 <td>
+                                    {% if hint is defined %}
+                                    <div id="hint" class="hint">{{ hint }}</div>
+                                    {% else %}
                                     <div id="hint"/>
+                                    {% endif %}
                                 </td>
                             </tr>
                         </table>

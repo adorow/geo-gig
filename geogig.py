@@ -9,6 +9,8 @@ from lastfm_little_wrapper import Lastfm
 from html_text_builder import HtmlTextBuilder
 from num_util import parse_num
 from gig_searcher import *
+from geocoding import *
+from gmaps_geocoding import *
 from lastfm_gig_searcher import *
 from itertools_plus import group_by
 
@@ -72,24 +74,25 @@ class GigSearchHandler(BaseRequestHandler):
         lat, lon = self._get_latitude_and_longitude_from_query(q)
         
         try:
-            gig_searcher = GigSearcher(LastfmGigSearcherSource(LASTFM_API_KEY), LastfmGigSearchResultTranslator())
-            if (lat and lon):
-                events_list = gig_searcher.search_by_coordinates(lat, lon)
-            else:
-                events_list = gig_searcher.search_by_location(q)
+            geocoder = Geocoder(GMapsGeocodingSource(), GMapsGeocodingResultTranslator())
+            gr = geocoder.find_by_coordinates(lat, lon) if (lat and lon) else geocoder.find_by_location(q)
+            lat = gr.latitude
+            lon = gr.longitude
+            location = gr.location
                 
-                # get all the points of the events
-                points = map(lambda e: map(parse_num, get_coordinate_from_event(e)), events_list) 
-                sum_lat, sum_lon = reduce(lambda (lat1, lon1), (lat2, lon2): (lat1 + lat2, lon1 + lon2), points, (0,0))
-                # get the average latitude and longitude
-                lat, lon = (str(sum_lat / len(points)), str(sum_lon / len(points))) if len(points) > 0 else (0,0)
+            gig_searcher = GigSearcher(LastfmGigSearcherSource(LASTFM_API_KEY), LastfmGigSearchResultTranslator())
+            events_list = gig_searcher.search_by_coordinates(lat, lon)
 
             events_list = group_by(events_list, key=get_coordinate_from_event)
+            hint = 'Showing results next to ' + location
                 
-            self._write('search.html', { 'center': {'latitude': lat, 'longitude': lon }, 'zoom': 8, 'events': events_list.items() })
-        except GigSearchException as e:
-            logging.error('Error on search for query "' + q + '". Description: ' + e.strerror)
+            self._write('search.html', { 'center': {'latitude': lat, 'longitude': lon }, 'zoom': 8, 'events': events_list.items(), 'hint': hint })
+        except (GigSearchException) as e:
+            logging.error('Error on search for query "' + q + '". Service: ' + e.service + '. Description: ' + e.strerror)
             self._get_error('Error requesting to the service ' + e.service + ' for query "' + q + '".', description=e.strerror)
+        except (GeocodingException) as e:
+            logging.error('Error on search for query "' + q + '". Service: ' + e.service + '. Description: ' + e.strerror)
+            self._get_invalid_search_syntax(q)
         except IOError as e:
             logging.error('Unexpected error rouse while querying for "' + q + '". Description: ' + str(e))
             self._get_error('Something suddenly went wrong when you queried for "' + q + '", try again later.', description=str(e))
@@ -100,8 +103,8 @@ class GigSearchHandler(BaseRequestHandler):
         self._get_error(error_title, description=error_description)
     
     def _get_invalid_search_syntax(self, query):
-        error_title = 'The query you tried, "' + query + '", is invalid.'
-        help_info = HtmlTextBuilder().text('Try queries like').linebreak().text('the name of a city, as in "New York", or "Sao Paulo, Brazil";').linebreak().text('the latitude and longitude of some point in the planet, like "56.02342 -20.48463".')
+        error_title = 'The query you tried, "' + query + '", looks invalid, we could not identify it as latitude and longitude, and neither as a valid location.'
+        help_info = HtmlTextBuilder().text('Try queries like').linebreak().text('the name of a city, as in "Dublin", or "Blumenau, Brazil";').linebreak().text('the latitude and longitude of some point in the planet, like "56.02342 -20.48463".')
         
         self._get_error(error_title, help=help_info)
     

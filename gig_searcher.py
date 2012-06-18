@@ -28,7 +28,6 @@ class IdentityGigSearchResultTranslator(GigSearchResultTranslator):
     
     def translate(self, source_result):
         return source_result
-    
         
 class GigSearcher:
     "Defines a GigSearcher. An implementation of this abstract class is able to search for gigs given some localization parameters."

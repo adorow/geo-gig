@@ -3,7 +3,7 @@ class HtmlTextBuilder:
     "Builder to create HTML texts used in the geo-gig pages."
     def __init__(self):
         "Creates a new HTtmlTextBuilder."
-        self._text = ''
+        self._text = unicode('')
 
     def get_text(self):
         "Gets the built text."
@@ -18,7 +18,7 @@ class HtmlTextBuilder:
         return self._append('<br />' * n)
     
     def _append(self, text):
-        self._text += text
+        self._text += unicode(text)
         return self
         
     def __str__(self):
