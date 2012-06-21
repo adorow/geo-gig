@@ -3,6 +3,7 @@ import logging
 import webapp2
 import jinja2
 import os
+import httplib
 
 from geogig_format_util import get_coordinate_from_event
 from lastfm_little_wrapper import Lastfm
@@ -53,7 +54,7 @@ class MainPageHandler(BaseRequestHandler):
     def get(self):    
         index_message = HtmlTextBuilder().text('Are you looking for gigs?').linebreak(2)
         index_message.text('Write the name of the city and/or country where you want to party, or write a latitude and longitude (in this order), and then press the search button.').linebreak(2)
-        index_message.text('Or just press the geolocalized search button, and let geo-gig find the gigs near you.')
+        index_message.text('Or simply press the geolocalized search button, and let geo-gig find the gigs near you.')
         
         self._get_message(index_message)
 
@@ -93,9 +94,13 @@ class GigSearchHandler(BaseRequestHandler):
         except (GeocodingException) as e:
             logging.error('Error on search for query "' + q + '". Service: ' + e.service + '. Description: ' + e.strerror)
             self._get_invalid_search_syntax(q)
+        except httplib.HTTPException as e:
+            logging.error('Error on HTTP request: ' + str(e))
+            self._get_error('An error happened while trying to make a request to another server, try again later.', description='[' + str(e) + ']')
         except IOError as e:
             logging.error('Unexpected error rouse while querying for "' + q + '". Description: ' + str(e))
             self._get_error('Something suddenly went wrong when you queried for "' + q + '", try again later.', description=str(e))
+        
 
     def _get_server_error_on_search(self, service, error, query):
         error_title = 'Error requesting to the service ' + service + ' for query "' + query + '".'

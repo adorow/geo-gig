@@ -38,13 +38,19 @@ body {
     color: #DDDDDD;
 }
 
-.event_details a {
+.event_links {
+    width: 100%;
+    right: 0px;
+}
+
+.event_details a, .event_links a {
     color: #000000;
     text-decoration: none;
 }
 
-.event_details a:hover {
+.event_details a:hover, .event_links a:hover {
     text-decoration: underline;
+    cursor: pointer;
 }
 
 .event_title {
