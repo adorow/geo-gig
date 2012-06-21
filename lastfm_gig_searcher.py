@@ -22,7 +22,7 @@ class LastfmGigSearcherSource(GigSearcherSource):
         
     def _search(self, location=None, latitude=None, longitude=None):
         # location should be sent only if latitude and longitude are not, because when location is informed, the Last.fm API always use this, and ignores latitude and longitude
-        lastfm_json_response = self._lastfm.geo().get_events(location=(location if not (latitude and longitude) else None), latitude=latitude, longitude=longitude, limit=30)
+        lastfm_json_response = self._lastfm.geo().get_events(location=(location if not (latitude and longitude) else None), latitude=latitude, longitude=longitude, limit=50)
         events_dict = json.loads(lastfm_json_response)
         
         if 'error' in events_dict:
@@ -75,7 +75,7 @@ class LastfmGigSearchResultTranslator(GigSearchResultTranslator):
     def _translate_artist(self, lastfm_artist):
         artist = {
             'name' : lastfm_artist,
-            'url': None
+            'url': 'http://www.last.fm/music/' + lastfm_artist.replace(' ', '+')
         }
         
         return artist
