@@ -1,6 +1,7 @@
 
 import json
 
+from datetime import datetime
 from lastfm_little_wrapper import Lastfm
 from gig_searcher import *
 from geogig_format_util import get_coordinate_from_event
@@ -60,7 +61,14 @@ class LastfmGigSearchResultTranslator(GigSearchResultTranslator):
         
         event['cancelled'] = True if ('cancelled' in lastfm_event and lastfm_event['cancelled'] == '1') else False
         
-        event['date'] = lastfm_event['startDate'] if 'startDate' in lastfm_event else None
+        def reformat_lastfm_date(lastfm_date):
+            try:
+                date = datetime.strptime(lastfm_date, '%a, %d %b %Y %H:%M:%S') # example: Sun, 25 Nov 2012 20:00:00
+                return date.strftime('%A, %B %d, %Y at %I:%M%p') # example: Sunday, November 25, 2012 at 8pm
+            except:
+                return date
+        
+        event['date'] = reformat_lastfm_date(lastfm_event['startDate']) if 'startDate' in lastfm_event else None
         
         if 'artists' not in lastfm_event or 'artist' not in lastfm_event['artists']:
             event['artists'] =  []
